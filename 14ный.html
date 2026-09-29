@@ -1,0 +1,2933 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Дело Александра</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; }
+
+  body {
+    min-height: 100vh;
+    background: #0d0d15;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    overflow: hidden;
+    color: #e8e8f0;
+  }
+
+  .scene {
+    position: relative;
+    width: 100%;
+    max-width: 1100px;
+    aspect-ratio: 16 / 10;
+    max-height: 95vh;
+  }
+
+  /* ===== КОМНАТА ===== */
+  .room {
+    position: absolute;
+    inset: 0;
+    background: #1a1a2e;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.8);
+    transition: opacity 0.5s, transform 0.5s;
+  }
+  .room.hidden { opacity:0; transform: scale(0.92); pointer-events:none; }
+
+  .wall {
+    position: absolute;
+    inset: 0 0 32% 0;
+    background: linear-gradient(180deg, #2a2a45 0%, #1f1f35 100%);
+    transition: background 0.5s;
+  }
+  .wall::after {
+    content:''; position:absolute;
+    bottom:0; left:0; right:0; height: 12px;
+    background: #14141f;
+    transition: background 0.5s;
+  }
+  .floor {
+    position: absolute;
+    inset: 68% 0 0 0;
+    background: repeating-linear-gradient(90deg,#3a2a1c 0 55px,#2e2118 55px 57px);
+    box-shadow: inset 0 12px 30px rgba(0,0,0,0.6);
+    transition: filter 0.5s;
+  }
+
+  .room.light-on .wall {
+    background: linear-gradient(180deg, #6a6a85 0%, #4a4a60 100%);
+  }
+  .room.light-on .wall::after { background: #35354a; }
+  .room.light-on .floor { filter: brightness(1.6); }
+  .room.light-on .lamp-mini__shade {
+    box-shadow: 0 0 80px rgba(255,220,120,1), 0 0 120px rgba(255,220,120,0.7);
+  }
+  .room.light-on .lamp-mini__light { opacity: 1; }
+
+  /* Окно */
+  .window {
+    position: absolute;
+    top: 10%; left: 6%;
+    width: 22%; height: 38%;
+    background: linear-gradient(180deg,#0d1b3e 0%,#16264f 60%,#1e3160 100%);
+    border: 8px solid #3a3a4e;
+    border-radius: 5px;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 6px 20px rgba(0,0,0,0.5);
+    overflow: hidden;
+    transition: background 0.5s, border-color 0.5s;
+  }
+  .window::before {
+    content:''; position:absolute;
+    left:50%; top:0; bottom:0; width: 5px;
+    transform: translateX(-50%); background:#3a3a4e;
+    transition: background 0.5s;
+    z-index: 2;
+  }
+  .window::after {
+    content:''; position:absolute;
+    top:50%; left:0; right:0; height: 5px;
+    transform: translateY(-50%); background:#3a3a4e;
+    transition: background 0.5s;
+    z-index: 2;
+  }
+
+  /* Звёзды — БЕЛЫЕ */
+  ./* Звёзды — БЕЛЫЕ */
+.star {
+  position: absolute;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-radius: 50%;
+  animation: twinkle 2s infinite alternate;
+  transition: opacity 0.6s;
+  opacity: 1;
+  z-index: 5;
+}
+.star.small {
+  width: 3px; height: 3px;
+  background: #ffffff !important;
+  box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
+}
+.star.medium {
+  width: 4px; height: 4px;
+  background: #ffffff !important;
+  box-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff;
+}
+.star.big {
+  width: 5px; height: 5px;
+  background: #ffffff !important;
+  box-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff;
+}
+.star.huge {
+  width: 6px; height: 6px;
+  background: #ffffff !important;
+  box-shadow: 0 0 14px #ffffff, 0 0 28px #ffffff, 0 0 45px #ffffff;
+}
+
+.room.light-on .star { opacity: 0; }
+
+@keyframes twinkle {
+  0%   { opacity: 0.5; transform: scale(0.85); }
+  100% { opacity: 1;   transform: scale(1.15); }
+}
+
+  /* Луна */
+  .moon {
+    position: absolute;
+    top: 12%; right: 15%;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ffffff 0%, #fff8dc 50%, #d4c9a0 100%);
+    box-shadow: 0 0 25px rgba(255,255,255,1), 0 0 50px rgba(255,248,220,0.8), 0 0 80px rgba(255,248,220,0.4);
+    transition: opacity 0.6s;
+    opacity: 1;
+    z-index: 1;
+  }
+  .room.light-on .moon { opacity: 0; }
+
+  /* Дневное окно */
+  .room.light-on .window {
+    background: linear-gradient(180deg, #4a6a9e 0%, #6a8ac0 60%, #8aa5d5 100%);
+    border-color: #8a8a9e;
+  }
+  .room.light-on .window::before,
+  .room.light-on .window::after {
+    background: #8a8a9e;
+  }
+
+  /* Выключатель на стене */
+  .wall-switch {
+    position: absolute;
+    top: 30%;
+    left: 3%;
+    width: 40px;
+    height: 62px;
+    background: linear-gradient(180deg, #f0e8d0 0%, #d8cfb8 100%);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 0 0 2px #b0a890;
+    cursor: pointer;
+    transition: 0.2s;
+    z-index: 8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 0;
+  }
+  .wall-switch:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.8), inset 0 0 0 2px #d4a76a, 0 0 20px rgba(244,211,94,0.5);
+  }
+  .wall-switch__btn {
+    width: 24px;
+    height: 22px;
+    background: linear-gradient(180deg, #b0a890 0%, #8b8060 100%);
+    border-radius: 4px;
+    box-shadow: inset 0 -3px 6px rgba(0,0,0,0.4), inset 0 3px 6px rgba(255,255,255,0.3);
+    transition: 0.25s;
+    position: relative;
+  }
+  .wall-switch__btn::after {
+    content:'';
+    position:absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 8px; height: 8px;
+    background: #c0392b;
+    border-radius: 50%;
+    transition: 0.25s;
+  }
+  .wall-switch.on .wall-switch__btn {
+    background: linear-gradient(180deg, #f4d35e 0%, #d4a72a 100%);
+    transform: translateY(-2px);
+    box-shadow: inset 0 3px 6px rgba(0,0,0,0.3), 0 0 15px rgba(244,211,94,0.9);
+  }
+  .wall-switch.on .wall-switch__btn::after {
+    background: #22c55e;
+    box-shadow: 0 0 10px #22c55e;
+  }
+  .wall-switch__label {
+    font-size: 0.5rem;
+    color: #555;
+    margin-top: 4px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .wall-switch.on .wall-switch__label { color: #8b6a3a; }
+
+  .calendar-wall {
+    position: absolute;
+    top: 12%; left: 34%;
+    width: 12%; height: 18%;
+    background: #f5f0e0;
+    border-radius: 3px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.7), inset 0 0 0 2px #d8cfb8;
+    cursor: pointer;
+    transition: 0.3s;
+    z-index: 4;
+  }
+  .calendar-wall:hover {
+    transform: scale(1.06) translateY(-3px);
+    box-shadow: 0 14px 30px rgba(0,0,0,0.9), 0 0 25px rgba(244,211,94,0.6), inset 0 0 0 2px #d8cfb8;
+  }
+  .calendar-wall::before {
+    content:'';
+    position:absolute;
+    top:0; left:0; right:0; height: 26%;
+    background: #c0392b;
+    border-radius: 3px 3px 0 0;
+  }
+  .calendar-wall::after {
+    content:'ИЮЛЬ';
+    position:absolute;
+    top: 5%; left: 50%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .calendar-day {
+    position: absolute;
+    top: 52%; left: 50%;
+    transform: translate(-50%,-50%);
+    color: #2a1f10;
+    font-size: 1.1rem;
+    font-weight: 800;
+  }
+
+  .clock-wall {
+    position: absolute;
+    top: 14%; right: 30%;
+    width: 10%; height: 16%;
+    border-radius: 50%;
+    background: radial-gradient(circle, #f5f0e0 0%, #c9bfa0 100%);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.7), inset 0 0 0 3px #8b6a3a;
+    cursor: pointer;
+    transition: 0.3s;
+    z-index: 4;
+  }
+  .clock-wall:hover {
+    transform: scale(1.08);
+    box-shadow: 0 14px 30px rgba(0,0,0,0.9), 0 0 25px rgba(244,211,94,0.6), inset 0 0 0 3px #8b6a3a;
+  }
+  .clock-wall::before {
+    content:'';
+    position:absolute;
+    top: 50%; left: 50%;
+    width: 3px; height: 32%;
+    background: #2a1f10;
+    transform-origin: bottom;
+    transform: translate(-50%,-100%) rotate(90deg);
+    border-radius: 2px;
+  }
+  .clock-wall::after {
+    content:'';
+    position:absolute;
+    top: 50%; left: 50%;
+    width: 2px; height: 40%;
+    background: #c0392b;
+    transform-origin: bottom;
+    transform: translate(-50%,-100%) rotate(90deg);
+    border-radius: 2px;
+  }
+
+  .closet {
+    position: absolute;
+    top: 18%; right: 5%;
+    width: 18%; height: 60%;
+    background: linear-gradient(90deg,#3a2a1c 0%,#4a3520 50%,#2e1f10 100%);
+    border-radius: 5px 5px 0 0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 0 0 3px #1a1010;
+    cursor: pointer;
+    transition: 0.3s;
+    z-index: 3;
+  }
+  .closet:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.8), 0 0 30px rgba(244,211,94,0.4), inset 0 0 0 3px #1a1010;
+  }
+  .closet::before {
+    content:''; position:absolute;
+    left:50%; top:6%; bottom:6%; width: 3px;
+    transform: translateX(-50%); background:#1a1010;
+  }
+  .closet::after {
+    content:''; position:absolute;
+    top: 50%; left: 20%;
+    width: 5px; height: 24px;
+    background:#d4a76a; border-radius:3px;
+    transform: translateY(-50%);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.3);
+  }
+
+  .desk-start {
+    position: absolute;
+    bottom: 26%; left: 20%;
+    width: 46%; height: 12%;
+    background: linear-gradient(180deg,#6b4423 0%,#4a2e15 100%);
+    border-radius: 5px 5px 2px 2px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6), inset 0 -5px 0 rgba(0,0,0,0.3);
+    cursor: pointer; transition: 0.3s;
+    z-index: 5;
+  }
+  .desk-start:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.8), 0 0 30px rgba(244,211,94,0.4);
+  }
+
+  .desk-paper-mini {
+    position:absolute;
+    width: 60px; height: 40px;
+    background:#e8e0cc;
+    top: -40px; left: 20%;
+    transform: rotate(-6deg);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+
+  .lamp-mini {
+    position: absolute;
+    bottom: 38%; left: 10%;
+    width: 8%; height: 26%;
+    z-index: 4;
+  }
+  .lamp-mini__shade {
+    position:absolute; top:0; left:0; right:0; height: 34%;
+    background: linear-gradient(180deg,#f4d35e,#e8b84a);
+    border-radius: 40% 40% 12% 12% / 60% 60% 15% 15%;
+    box-shadow: 0 0 20px rgba(244,211,94,0.4);
+    transition: box-shadow 0.5s, background 0.5s;
+  }
+  .lamp-mini__pole {
+    position:absolute; bottom:0; left:50%; transform: translateX(-50%);
+    width: 4px; height: 68%;
+    background: linear-gradient(90deg,#3a3a4e,#55556e);
+  }
+  .lamp-mini__light {
+    position:absolute; top: 28%; left:-80%; right:-80%; height:130%;
+    background: radial-gradient(ellipse at top, rgba(255,220,120,0.4), transparent 70%);
+    pointer-events: none;
+    opacity: 0.3;
+    transition: opacity 0.5s;
+  }
+
+  .start-title {
+    position: absolute;
+    top: 6%; left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .start-title h1 {
+    font-size: 1.2rem;
+    color: #f4d35e;
+    letter-spacing: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+    text-shadow: 0 0 20px rgba(244,211,94,0.5);
+  }
+
+  .click-desk-hint {
+    position: absolute;
+    bottom: 42%; left: 43%;
+    transform: translateX(-50%);
+    color: #f4d35e;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    animation: pulse 2s infinite;
+    z-index: 10;
+    pointer-events: none;
+    text-shadow: 0 0 10px rgba(0,0,0,0.9);
+  }
+  @keyframes pulse { 0%,100%{opacity:0.6;} 50%{opacity:1;} }
+
+  /* ===== ЭКРАН СТОЛА ===== */
+  .desk-screen {
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    opacity: 0;
+    transform: scale(1.1);
+    pointer-events: none;
+    transition: opacity 0.5s, transform 0.5s;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.8);
+    background: #1a1208;
+  }
+  .desk-screen.active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+  .desk-screen.dark .desk-surface { filter: brightness(0.05); }
+  .desk-screen.dark .item { opacity: 0; pointer-events: none; }
+  .desk-screen.dark .hud { opacity: 0; pointer-events: none; }
+  .desk-screen.dark .inventory { opacity: 0; pointer-events: none; }
+  .desk-screen.dark .notes-corner { opacity: 0; pointer-events: none; }
+
+  .desk-surface {
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(90deg,
+        rgba(0,0,0,0.06) 0 2px,
+        transparent 2px 24px),
+      linear-gradient(180deg, #4a3520 0%, #3a2a1c 50%, #2e1f10 100%);
+    transition: filter 0.8s ease;
+  }
+  .desk-surface::after {
+    content:'';
+    position:absolute; inset:0;
+    background: radial-gradient(ellipse at 50% 30%, rgba(255,220,120,0.15), transparent 60%);
+    pointer-events: none;
+  }
+
+  .dark-overlay {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s;
+    z-index: 80;
+  }
+  .desk-screen.dark .dark-overlay { opacity: 1; }
+
+  .hud {
+    position: absolute;
+    top: 10px; left: 10px; right: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 50;
+    gap: 6px;
+    flex-wrap: wrap;
+    transition: opacity 0.5s;
+  }
+  .hud-left { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn {
+    background: rgba(20,20,30,0.9);
+    color: #e8e8f0;
+    border: 1px solid rgba(244,211,94,0.3);
+    padding: 7px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn:hover {
+    background: rgba(244,211,94,0.15);
+    border-color: #f4d35e;
+    transform: translateY(-1px);
+  }
+  .btn--gold {
+    background: #f4d35e;
+    color: #1a1a2e;
+    border-color: #f4d35e;
+  }
+  .btn--gold:hover { background: #ffe97a; }
+
+  .level-badge {
+    background: rgba(244,211,94,0.15);
+    color: #f4d35e;
+    border: 1px solid rgba(244,211,94,0.4);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .notes-corner {
+    position: absolute;
+    top: 56px;
+    right: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 55;
+    transition: opacity 0.5s;
+    align-items: center;
+  }
+  .note-bubble {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #f4d35e, #c9a26b);
+    color: #1a1a2e;
+    font-size: 1.2rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(244,211,94,0.6), 0 0 20px rgba(244,211,94,0.4);
+    transition: transform 0.2s;
+    animation: notePulse 2s infinite;
+    position: relative;
+  }
+  .note-bubble:hover {
+    transform: scale(1.15);
+    box-shadow: 0 6px 24px rgba(244,211,94,0.9), 0 0 30px rgba(244,211,94,0.6);
+  }
+  .note-bubble::before {
+    content: '📝';
+    font-size: 1.2rem;
+  }
+  .note-bubble__count {
+    position: absolute;
+    bottom: -2px;
+    right: -4px;
+    background: #c0392b;
+    color: #fff;
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 2px 5px;
+    border-radius: 10px;
+    border: 2px solid #1a1a2e;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+  }
+  .note-bubble__badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 18px;
+    height: 18px;
+    background: #22c55e;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 0.65rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #1a1a2e;
+    animation: badgePulse 1.5s infinite;
+  }
+  @keyframes badgePulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+  }
+  @keyframes notePulse {
+    0%,100% { box-shadow: 0 4px 16px rgba(244,211,94,0.6), 0 0 20px rgba(244,211,94,0.4); }
+    50% { box-shadow: 0 4px 24px rgba(244,211,94,1), 0 0 30px rgba(244,211,94,0.8); }
+  }
+
+  .item {
+    position: absolute;
+    cursor: grab;
+    transition: filter 0.2s, opacity 0.6s;
+    filter: drop-shadow(0 6px 14px rgba(0,0,0,0.6));
+    user-select: none;
+  }
+  .item:active { cursor: grabbing; }
+  .item:hover {
+    filter: drop-shadow(0 12px 24px rgba(0,0,0,0.8)) drop-shadow(0 0 18px rgba(244,211,94,0.5));
+  }
+  .item.dragging {
+    cursor: grabbing;
+    z-index: 999;
+    filter: drop-shadow(0 20px 40px rgba(0,0,0,0.9)) drop-shadow(0 0 30px rgba(244,211,94,0.8));
+  }
+  .item.done { filter: drop-shadow(0 0 18px rgba(100,255,150,0.5)); }
+  .item.done::after {
+    content:'✓';
+    position:absolute;
+    top: -7px; right: -7px;
+    width: 20px; height: 20px;
+    background: #22c55e;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    z-index: 10;
+  }
+
+  .item__label {
+    position: absolute;
+    bottom: -20px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.9);
+    color: #f4d35e;
+    font-size: 0.6rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: 0.2s;
+    pointer-events: none;
+    letter-spacing: 0.3px;
+  }
+  .item:hover .item__label { opacity: 1; }
+
+  .folder {
+    top: 22%; left: 8%;
+    width: 22%; height: 30%;
+    background: linear-gradient(135deg, #c9a26b 0%, #a87d3f 100%);
+    border-radius: 4px 12px 4px 4px;
+    box-shadow: inset 0 0 0 2px #8b6a3a, 0 10px 24px rgba(0,0,0,0.6);
+    z-index: 10;
+  }
+  .folder::before {
+    content:'';
+    position:absolute;
+    top: -12px; left: 0;
+    width: 55%; height: 16px;
+    background: linear-gradient(135deg, #d9b27b 0%, #b88a4a 100%);
+    border-radius: 6px 10px 0 0;
+    box-shadow: inset 0 0 0 2px #8b6a3a;
+  }
+  .folder::after {
+    content:'ЖУРНАЛ';
+    position:absolute;
+    top: 40%; left: 50%;
+    transform: translate(-50%,-50%) rotate(-4deg);
+    color: #4a2e15;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    border-top: 2px solid #4a2e15;
+    border-bottom: 2px solid #4a2e15;
+    padding: 4px 8px;
+    white-space: nowrap;
+  }
+
+  .paper-doc {
+    top: 20%; left: 36%;
+    width: 18%; height: 26%;
+    background: #f0e8d0;
+    border-radius: 2px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+    transform: rotate(3deg);
+    z-index: 8;
+  }
+  .paper-doc::before {
+    content:'';
+    position:absolute;
+    inset: 12%;
+    background: repeating-linear-gradient(180deg, transparent 0 8px, #c9c5b0 8px 9px);
+    opacity: 0.6;
+  }
+
+  .paper-recipe {
+    top: 24%; left: 58%;
+    width: 16%; height: 24%;
+    background: #f5f0e0;
+    border-radius: 2px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+    transform: rotate(-4deg);
+    border-left: 4px solid #c0392b;
+    z-index: 8;
+  }
+  .paper-recipe::before {
+    content:'Rx';
+    position:absolute;
+    top: 8%; left: 10%;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #c0392b;
+    font-style: italic;
+  }
+
+  .photo {
+    top: 16%; right: 8%;
+    width: 14%; height: 20%;
+    background: #e8dcc0;
+    border: 6px solid #f8f4e8;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.7);
+    transform: rotate(6deg);
+    z-index: 8;
+  }
+  .photo::before {
+    content:'';
+    position:absolute;
+    inset: 8%;
+    background: linear-gradient(180deg, #8b7a5a 0%, #4a3a2a 100%);
+    border-radius: 2px;
+  }
+
+  .phone {
+    bottom: 16%; left: 24%;
+    width: 9%; height: 16%;
+    background: linear-gradient(180deg, #1a1a2e, #0a0a15);
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.7), inset 0 0 0 2px #333;
+    transform: rotate(-8deg);
+    z-index: 8;
+  }
+  .phone::before {
+    content:'';
+    position:absolute;
+    inset: 8%;
+    background: #0d0d18;
+    border-radius: 4px;
+    box-shadow: inset 0 0 20px rgba(100,200,255,0.15);
+  }
+
+  .magnifier {
+    bottom: 10%; left: 50%;
+    width: 8%; height: 14%;
+    z-index: 8;
+  }
+  .magnifier::before {
+    content:'';
+    position:absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 55%; aspect-ratio: 1;
+    border: 4px solid #d4a76a;
+    border-radius: 50%;
+    background: rgba(200,220,255,0.15);
+    box-shadow: 0 0 20px rgba(212,167,106,0.5);
+  }
+  .magnifier::after {
+    content:'';
+    position:absolute;
+    bottom: 0; left: 55%;
+    width: 5px; height: 45%;
+    background: #8b6a3a;
+    border-radius: 3px;
+    transform: rotate(35deg);
+  }
+
+  .lens {
+    bottom: 8%; right: 6%;
+    width: 9%; height: 15%;
+    z-index: 8;
+  }
+  .lens::before {
+    content:'';
+    position:absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 60%; aspect-ratio: 1;
+    border: 5px solid #e8c98a;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,220,150,0.3), rgba(200,220,255,0.1));
+    box-shadow: 0 0 30px rgba(232,201,138,0.7), inset 0 0 15px rgba(255,220,150,0.4);
+  }
+  .lens::after {
+    content:'';
+    position:absolute;
+    bottom: 0; left: 55%;
+    width: 6px; height: 45%;
+    background: #8b6a3a;
+    border-radius: 3px;
+    transform: rotate(35deg);
+  }
+
+  .key-item {
+    bottom: 30%; left: 50%;
+    width: 14%; height: 12%;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, #c9a26b 0%, #f4d35e 50%, #c9a26b 100%);
+    border-radius: 6px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.7), inset 0 0 0 2px #8b6a3a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 8;
+  }
+  .key-item::before {
+    content:'🔑';
+    font-size: 1.4rem;
+    filter: drop-shadow(0 0 8px rgba(244,211,94,0.8));
+  }
+  .key-item::after {
+    content:'КЛЮЧ';
+    position: absolute;
+    top: -16px; left: 50%;
+    transform: translateX(-50%);
+    color: #f4d35e;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(244,211,94,0.8);
+  }
+
+  .hidden-number {
+    position: absolute;
+    top: 42%; left: 28%;
+    font-family: 'Courier New', monospace;
+    font-size: 2.2rem;
+    color: transparent;
+    font-weight: 800;
+    letter-spacing: 8px;
+    z-index: 5;
+    pointer-events: none;
+    transition: color 0.2s, text-shadow 0.2s;
+  }
+
+  .flashlight {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    background: radial-gradient(circle, #4a4a5a, #1a1a2a);
+    border-radius: 50%;
+    box-shadow: 0 0 40px rgba(255,220,120,0.7), inset 0 0 15px rgba(255,220,120,0.3);
+    display: none;
+    z-index: 200;
+    pointer-events: none;
+    transform: translate(-50%,-50%);
+    justify-content: center;
+    align-items: center;
+    font-size: 1.8rem;
+    border: 2px solid #f4d35e;
+    cursor: pointer;
+  }
+  .flashlight.on { display: flex; pointer-events: auto; }
+
+  .flashlight-beam {
+    position: absolute;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+      rgba(255,240,180,0.95) 0%,
+      rgba(255,220,120,0.5) 30%,
+      transparent 65%);
+    pointer-events: none;
+    transform: translate(-50%,-50%);
+    z-index: 150;
+    display: none;
+  }
+  .flashlight-beam.on { display: block; }
+
+  .inventory {
+    position: absolute;
+    bottom: 10px; left: 10px; right: 10px;
+    background: rgba(10,10,18,0.9);
+    border: 1px solid rgba(244,211,94,0.3);
+    border-radius: 12px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 50;
+    backdrop-filter: blur(10px);
+    min-height: 46px;
+    overflow-x: auto;
+    transition: opacity 0.5s;
+  }
+  .inventory__title {
+    font-size: 0.6rem;
+    color: #f4d35e;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding-right: 10px;
+    border-right: 1px solid rgba(244,211,94,0.2);
+  }
+  .inv-item {
+    background: rgba(244,211,94,0.1);
+    border: 1px solid rgba(244,211,94,0.4);
+    color: #f4d35e;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.62rem;
+    font-weight: 600;
+    white-space: nowrap;
+    animation: popIn 0.4s ease;
+  }
+  @keyframes popIn {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  .inv-empty { color: #555; font-size: 0.65rem; font-style: italic; }
+
+  .closet-screen {
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    opacity: 0;
+    transform: scale(1.1);
+    pointer-events: none;
+    transition: opacity 0.5s, transform 0.5s;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.8);
+    background: linear-gradient(180deg, #1a1010 0%, #0a0505 100%);
+    z-index: 60;
+  }
+  .closet-screen.active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+  .closet-inside {
+    position: absolute;
+    inset: 12% 15%;
+    background: linear-gradient(180deg, #3a2818 0%, #1f1408 100%);
+    border-radius: 10px;
+    box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .safe-big {
+    width: 55%;
+    aspect-ratio: 1;
+    max-width: 380px;
+    background: linear-gradient(180deg, #4a4a52, #2a2a30);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 0 0 6px #1a1a20;
+    position: relative;
+  }
+  .safe-big::before {
+    content:'';
+    position:absolute;
+    top: 12%; left: 50%;
+    transform: translateX(-50%);
+    width: 60%; height: 26px;
+    background: #0a0a10;
+    border-radius: 4px;
+    box-shadow: inset 0 0 12px rgba(212,167,106,0.4);
+  }
+  .safe-big__display {
+    position: absolute;
+    top: 15%; left: 50%;
+    transform: translateX(-50%);
+    color: #d4a76a;
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    letter-spacing: 6px;
+    z-index: 2;
+  }
+  .safe-big__dial {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #d4a76a 0%, #8b6a3a 70%, #5a4020 100%);
+    box-shadow: 0 0 0 6px #1a1a20, 0 0 0 9px #4a4a52, 0 6px 20px rgba(0,0,0,0.7);
+    cursor: pointer;
+    transition: transform 0.6s;
+  }
+  .safe-big__dial:hover { transform: translate(-50%,-50%) rotate(90deg); }
+
+  .arrow-to-desk {
+    position: absolute;
+    bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    background: #f4d35e;
+    color: #1a1a2e;
+    padding: 12px 28px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    display: none;
+    box-shadow: 0 10px 30px rgba(244,211,94,0.5);
+    animation: arrowSlide 1.2s infinite;
+    z-index: 70;
+    border: none;
+  }
+  .arrow-to-desk.show { display: flex; align-items: center; gap: 10px; }
+  @keyframes arrowSlide {
+    0%,100% { transform: translateX(-50%) translateX(0); }
+    50% { transform: translateX(-50%) translateX(-10px); }
+  }
+
+  .modal {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    padding: 16px;
+    backdrop-filter: blur(6px);
+  }
+  .modal.active { opacity: 1; pointer-events: auto; }
+
+  .modal__box {
+    background: linear-gradient(180deg, #1f1a10 0%, #14100a 100%);
+    border: 1px solid rgba(244,211,94,0.4);
+    border-radius: 14px;
+    padding: 22px;
+    max-width: 580px;
+    width: 100%;
+    max-height: 92%;
+    overflow-y: auto;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.9), 0 0 60px rgba(244,211,94,0.1);
+    transform: scale(0.9);
+    transition: transform 0.3s;
+    position: relative;
+  }
+  .modal.active .modal__box { transform: scale(1); }
+
+  .modal__title {
+    color: #f4d35e;
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+    padding-right: 30px;
+  }
+  .modal__sub {
+    color: #8a8a9a;
+    font-size: 0.68rem;
+    margin-bottom: 14px;
+    letter-spacing: 0.5px;
+  }
+
+  .modal__close {
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 26px; height: 26px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50%;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+  }
+  .modal__close:hover { background: rgba(255,80,80,0.2); color: #fff; }
+
+  .modal__content {
+    color: #d8d8e0;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+
+  .doc-paper {
+    background: #e8e0cc;
+    color: #2a1f10;
+    padding: 16px;
+    border-radius: 4px;
+    font-family: 'Georgia', serif;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.15);
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .doc-paper::before {
+    content:'';
+    position:absolute; inset: 10px;
+    border: 1px dashed rgba(80,60,30,0.2);
+    pointer-events: none;
+  }
+
+  .note-paper {
+    background: linear-gradient(135deg, #f5efdc 0%, #e8dfc8 100%);
+    color: #2a1f10;
+    padding: 20px 22px;
+    border-radius: 3px;
+    font-family: 'Comic Sans MS', 'Georgia', cursive;
+    font-size: 0.88rem;
+    line-height: 1.75;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 0 60px rgba(139,106,58,0.15);
+    margin-bottom: 12px;
+    position: relative;
+    transform: rotate(-1deg);
+    border-left: 4px solid #c0392b;
+  }
+  .note-paper::before {
+    content:'';
+    position:absolute;
+    top: 8px; right: 8px;
+    width: 30px; height: 30px;
+    background: radial-gradient(circle at 30% 30%, #f4d35e 0%, #8b6a3a 100%);
+    border-radius: 50%;
+    opacity: 0.4;
+  }
+  .note-paper__sign {
+    text-align: right;
+    margin-top: 12px;
+    font-style: italic;
+    color: #8b6a3a;
+    font-size: 0.8rem;
+  }
+
+  .archive-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .archive-nav button {
+    background: rgba(244,211,94,0.15);
+    border: 1px solid rgba(244,211,94,0.5);
+    color: #f4d35e;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+    font-family: inherit;
+    min-width: 60px;
+  }
+  .archive-nav button:hover {
+    background: rgba(244,211,94,0.3);
+    transform: translateY(-1px);
+  }
+  .archive-nav button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  .archive-counter {
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: #f4d35e;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  /* Кнопка "Начать заново" сверху архивной панели */
+  .archive-top-restart {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+  .archive-top-restart button {
+    background: linear-gradient(135deg, #f4d35e, #d4a72a);
+    color: #1a1a2e;
+    border: none;
+    padding: 9px 22px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.2s;
+    font-family: inherit;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 14px rgba(244,211,94,0.5);
+  }
+  .archive-top-restart button:hover {
+    background: linear-gradient(135deg, #ffe97a, #f4d35e);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(244,211,94,0.7);
+  }
+
+  .green-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(34,197,94,0.25) 0%, rgba(0,0,0,0.9) 70%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s;
+    padding: 24px;
+    backdrop-filter: blur(8px);
+  }
+  .green-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .green-box {
+    background: linear-gradient(180deg, #0f2010 0%, #061206 100%);
+    border: 2px solid #22c55e;
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.9), 0 0 60px rgba(34,197,94,0.5);
+    transform: scale(0.9);
+    transition: transform 0.4s;
+    position: relative;
+  }
+  .green-overlay.active .green-box { transform: scale(1); }
+  .green-box__icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 0 20px rgba(34,197,94,0.9));
+    animation: checkPulse 2s infinite;
+  }
+  @keyframes checkPulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .green-box__title {
+    color: #86efac;
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .green-box__text {
+    color: #d1fae5;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    margin-bottom: 18px;
+    font-family: 'Georgia', serif;
+  }
+  .green-box__text b {
+    color: #22c55e;
+    font-size: 1.05rem;
+  }
+
+  .alphabet-box {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(244,211,94,0.3);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 10px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    line-height: 1.8;
+    letter-spacing: 1px;
+    text-align: center;
+    color: #d4a76a;
+  }
+  .alphabet-box .row {
+    display: flex;
+    justify-content: center;
+    gap: 3px;
+    flex-wrap: wrap;
+  }
+  .alphabet-box .letter {
+    display: inline-block;
+    width: 18px;
+    height: 22px;
+    text-align: center;
+    color: #d4a76a;
+  }
+  .alphabet-box .letter.under {
+    color: #22c55e;
+    font-weight: 700;
+  }
+  .alphabet-box .divider {
+    color: #555;
+    margin: 4px 0;
+    font-size: 0.7rem;
+  }
+  .alphabet-box .label {
+    color: #8a8a9a;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+
+  .example-box {
+    background: rgba(34,197,94,0.1);
+    border: 1px solid rgba(34,197,94,0.4);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 10px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: #86efac;
+  }
+  .example-box b { color: #22c55e; }
+
+  .input-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .input-row input {
+    flex: 1;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(244,211,94,0.3);
+    color: #f4d35e;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+    outline: none;
+    transition: 0.2s;
+  }
+  .input-row input:focus {
+    border-color: #f4d35e;
+    box-shadow: 0 0 0 3px rgba(244,211,94,0.15);
+  }
+  .input-row input::placeholder { color: #555; letter-spacing: 0; }
+
+  .feedback {
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    margin-top: 10px;
+    display: none;
+  }
+  .feedback.show { display: block; animation: popIn 0.3s ease; }
+  .feedback.error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); }
+  .feedback.success { background: rgba(34,197,94,0.15); color: #86efac; border: 1px solid rgba(34,197,94,0.4); }
+
+  .sticky-note {
+    background: #f4d35e;
+    color: #2a1f10;
+    padding: 12px;
+    border-radius: 2px;
+    font-family: 'Comic Sans MS', cursive;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    transform: rotate(-2deg);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    margin-bottom: 10px;
+  }
+
+  .letter-field {
+    position: relative;
+    height: 130px;
+    background: radial-gradient(circle at 50% 50%, #1a1410 0%, #050505 100%);
+    border-radius: 8px;
+    border: 1px solid rgba(244,211,94,0.3);
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .letter-chip {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #f4d35e, #8b6a3a);
+    color: #1a1a2e;
+    font-family: 'Georgia', serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    box-shadow: 0 0 20px rgba(244,211,94,0.7), inset 0 0 10px rgba(255,255,255,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    user-select: none;
+  }
+  .letter-chip:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 30px rgba(244,211,94,1), inset 0 0 15px rgba(255,255,255,0.6);
+    z-index: 5;
+  }
+  .letter-chip.used {
+    opacity: 0.15;
+    pointer-events: none;
+  }
+
+  .slots-row {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .slot {
+    width: 34px;
+    height: 42px;
+    border: 2px dashed rgba(244,211,94,0.4);
+    border-radius: 6px;
+    background: rgba(0,0,0,0.4);
+    color: #f4d35e;
+    font-family: 'Georgia', serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+    position: relative;
+  }
+  .slot::before {
+    content: attr(data-num);
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.5rem;
+    color: #555;
+    font-weight: 400;
+  }
+  .slot.filled {
+    background: rgba(244,211,94,0.15);
+    border-color: #f4d35e;
+    border-style: solid;
+  }
+  .slot.correct {
+    background: rgba(34,197,94,0.2);
+    border-color: #22c55e;
+    color: #86efac;
+  }
+  .slot.wrong {
+    background: rgba(239,68,68,0.2);
+    border-color: #ef4444;
+    color: #fca5a5;
+  }
+
+  .verdict-word-row {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin: 10px 0;
+    flex-wrap: wrap;
+  }
+  .verdict-slot {
+    width: 32px;
+    height: 40px;
+    border: 2px dashed rgba(139,106,58,0.6);
+    border-radius: 5px;
+    background: rgba(255,255,255,0.05);
+    color: #8b6a3a;
+    font-family: 'Georgia', serif;
+    font-size: 1rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .verdict-slot.filled {
+    background: rgba(139,106,58,0.2);
+    border-color: #8b6a3a;
+    border-style: solid;
+    color: #4a2e15;
+  }
+  .verdict-slot.correct {
+    background: rgba(34,197,94,0.2);
+    border-color: #22c55e;
+    color: #166534;
+  }
+  .verdict-slot.wrong {
+    background: rgba(239,68,68,0.2);
+    border-color: #ef4444;
+    color: #991b1b;
+  }
+
+  .verdict-chips {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 12px 0;
+  }
+  .verdict-chip {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #c9a26b, #8b6a3a);
+    color: #f5f0e0;
+    font-family: 'Georgia', serif;
+    font-size: 1rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+    transition: transform 0.2s;
+    user-select: none;
+  }
+  .verdict-chip:hover {
+    transform: scale(1.1) translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.6);
+  }
+  .verdict-chip.used {
+    opacity: 0.15;
+    pointer-events: none;
+  }
+
+  .final-screen {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, #1a1a2e 0%, #050508 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 400;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s;
+    padding: 24px;
+    border-radius: 10px;
+    overflow-y: auto;
+  }
+  .final-screen.active { opacity: 1; pointer-events: auto; }
+  .final-box {
+    text-align: center;
+    max-width: 560px;
+  }
+  .final-box h2 {
+    color: #f4d35e;
+    font-size: 1.4rem;
+    margin-bottom: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .final-box p {
+    color: #a0a0b8;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    margin-bottom: 14px;
+  }
+  .final-box .seal {
+    font-size: 2.8rem;
+    margin: 16px 0;
+    filter: drop-shadow(0 0 20px rgba(244,211,94,0.6));
+  }
+  .chain {
+    background: rgba(244,211,94,0.08);
+    border: 1px solid rgba(244,211,94,0.3);
+    border-radius: 10px;
+    padding: 14px;
+    margin: 16px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    color: #f4d35e;
+    line-height: 1.9;
+    letter-spacing: 1px;
+    text-align: center;
+  }
+  .chain b { color: #c0392b; }
+
+  @media (max-width: 700px) {
+    .start-title h1 { font-size: 0.85rem; letter-spacing: 1.5px; }
+    .level-badge { font-size: 0.55rem; padding: 4px 9px; }
+    .btn { font-size: 0.6rem; padding: 6px 9px; }
+    .modal__box { padding: 16px; }
+    .modal__title { font-size: 0.85rem; }
+    .folder::after { font-size: 0.55rem; }
+    .inventory__title { font-size: 0.52rem; }
+    .inv-item { font-size: 0.58rem; }
+    .item__label { font-size: 0.5rem; }
+    .hidden-number { font-size: 1.4rem; letter-spacing: 4px; }
+    .slot { width: 26px; height: 34px; font-size: 0.85rem; }
+    .verdict-slot { width: 24px; height: 32px; font-size: 0.8rem; }
+    .letter-chip { width: 32px; height: 32px; font-size: 0.9rem; }
+    .verdict-chip { width: 30px; height: 30px; font-size: 0.85rem; }
+    .note-bubble { width: 42px; height: 42px; }
+    .wall-switch { width: 32px; height: 50px; top: 42%; left: 2%; }
+    .wall-switch__btn { width: 20px; height: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scene">
+
+  <!-- ========== КОМНАТА ========== -->
+  <div class="room" id="room">
+    <div class="wall"></div>
+    <div class="floor"></div>
+
+    <!-- Выключатель на стене -->
+    <div class="wall-switch" id="wallSwitch" title="Включить/выключить свет">
+      <div class="wall-switch__btn"></div>
+      <div class="wall-switch__label">СВЕТ</div>
+    </div>
+
+    <!-- Окно с белыми звёздами и луной -->
+    <div class="window">
+      <div class="moon"></div>
+
+      <!-- Большие яркие звёзды -->
+      <div class="star huge" style="top:8%; left:15%;"></div>
+      <div class="star huge" style="top:22%; left:38%; animation-delay:0.5s;"></div>
+      <div class="star big" style="top:18%; left:62%; animation-delay:1s;"></div>
+      <div class="star big" style="top:35%; left:80%; animation-delay:0.3s;"></div>
+      <div class="star huge" style="top:48%; left:25%; animation-delay:0.8s;"></div>
+      <div class="star big" style="top:55%; left:50%; animation-delay:1.4s;"></div>
+      <div class="star huge" style="top:62%; left:72%; animation-delay:0.2s;"></div>
+      <div class="star big" style="top:75%; left:18%; animation-delay:1.1s;"></div>
+      <div class="star huge" style="top:78%; left:42%; animation-delay:0.6s;"></div>
+      <div class="star big" style="top:82%; left:65%; animation-delay:1.6s;"></div>
+      <div class="star huge" style="top:88%; left:88%; animation-delay:0.9s;"></div>
+      <div class="star big" style="top:8%; left:88%; animation-delay:1.9s;"></div>
+
+      <!-- Средние звёзды -->
+      <div class="star medium" style="top:15%; left:52%; animation-delay:0.4s;"></div>
+      <div class="star medium" style="top:28%; left:72%; animation-delay:1.3s;"></div>
+      <div class="star medium" style="top:42%; left:15%; animation-delay:0.7s;"></div>
+      <div class="star medium" style="top:52%; left:88%; animation-delay:1.7s;"></div>
+      <div class="star medium" style="top:68%; left:32%; animation-delay:0.9s;"></div>
+      <div class="star medium" style="top:72%; left:58%; animation-delay:1.2s;"></div>
+
+      <!-- Маленькие звёзды -->
+      <div class="star small" style="top:12%; left:28%; animation-delay:0.6s;"></div>
+      <div class="star small" style="top:25%; left:8%; animation-delay:1.5s;"></div>
+      <div class="star small" style="top:32%; left:48%; animation-delay:0.2s;"></div>
+      <div class="star small" style="top:38%; left:68%; animation-delay:1.8s;"></div>
+      <div class="star small" style="top:45%; left:38%; animation-delay:0.9s;"></div>
+      <div class="star small" style="top:58%; left:20%; animation-delay:1.4s;"></div>
+      <div class="star small" style="top:65%; left:52%; animation-delay:0.5s;"></div>
+      <div class="star small" style="top:80%; left:82%; animation-delay:1.1s;"></div>
+      <div class="star small" style="top:85%; left:28%; animation-delay:0.7s;"></div>
+      <div class="star small" style="top:92%; left:48%; animation-delay:1.3s;"></div>
+    </div>
+
+    <div class="calendar-wall" id="calendarWall">
+      <div class="calendar-day">14</div>
+    </div>
+
+    <div class="clock-wall" id="clockWall"></div>
+
+    <div class="closet" id="closet"></div>
+
+    <div class="lamp-mini">
+      <div class="lamp-mini__light"></div>
+      <div class="lamp-mini__shade"></div>
+      <div class="lamp-mini__pole"></div>
+    </div>
+
+    <div class="desk-start" id="deskStart">
+      <div class="desk-paper-mini"></div>
+    </div>
+
+    <div class="start-title">
+      <h1>Дело Александра</h1>
+    </div>
+
+    <div class="click-desk-hint">▼ Подойти к столу ▼</div>
+  </div>
+
+  <!-- ========== ЭКРАН СТОЛА ========== -->
+  <div class="desk-screen" id="deskScreen">
+    <div class="desk-surface"></div>
+
+    <div class="dark-overlay"></div>
+
+    <div class="hidden-number" id="hiddenNumber">№ ОП-2847</div>
+
+    <div class="hud">
+      <div class="hud-left">
+        <button class="btn" id="backToRoomFromDesk">← В кабинет</button>
+        <div class="level-badge" id="levelBadgeDesk">Уровень 1 / 9</div>
+      </div>
+      <button class="btn btn--gold" id="hintBtnDesk">💡 Подсказка</button>
+    </div>
+
+    <div class="notes-corner" id="notesCorner"></div>
+
+    <div class="item folder" id="itemFolder">
+      <div class="item__label">Журнал дела</div>
+    </div>
+
+    <div class="item paper-doc" id="itemDoc" style="display:none;">
+      <div class="item__label">Заключение врача</div>
+    </div>
+
+    <div class="item paper-recipe" id="itemRecipe" style="display:none;">
+      <div class="item__label">Рецептурный бланк</div>
+    </div>
+
+    <div class="item photo" id="itemPhoto" style="display:none;">
+      <div class="item__label">Фото</div>
+    </div>
+
+    <div class="item phone" id="itemPhone" style="display:none;">
+      <div class="item__label">Телефон</div>
+    </div>
+
+    <div class="item magnifier" id="itemLetters" style="display:none;">
+      <div class="item__label">Дневник</div>
+    </div>
+
+    <div class="item lens" id="itemLens" style="display:none;">
+      <div class="item__label">Лупа</div>
+    </div>
+
+    <div class="item key-item" id="itemKey" style="display:none;">
+      <div class="item__label">Ключ</div>
+    </div>
+
+    <div class="item" id="itemVerdict" style="display:none;bottom:30%;left:50%;transform:translateX(-50%);width:90px;height:120px;background:#f5f0e0;border-radius:3px;box-shadow:0 8px 20px rgba(0,0,0,0.7);">
+      <div class="item__label">Вердикт</div>
+    </div>
+
+    <div class="flashlight-beam" id="flashlightBeam"></div>
+    <div class="flashlight" id="flashlight">🔦</div>
+
+    <div class="inventory" id="inventory">
+      <div class="inventory__title">Улики</div>
+      <div class="inv-empty" id="invEmpty">Пока ничего не найдено...</div>
+    </div>
+  </div>
+
+  <!-- ========== ЭКРАН ШКАФА ========== -->
+  <div class="closet-screen" id="closetScreen">
+    <div class="hud">
+      <div class="hud-left">
+        <button class="btn" id="backToRoomFromCloset">← В комнату</button>
+      </div>
+      <div class="level-badge">🔐 Сейф</div>
+    </div>
+
+    <div class="closet-inside">
+      <div class="safe-big">
+        <div class="safe-big__display" id="safeDisplay">····</div>
+        <div class="safe-big__dial" id="safeDial"></div>
+      </div>
+    </div>
+
+    <button class="arrow-to-desk" id="arrowToDesk">← Вернуться к столу</button>
+
+    <div class="modal" id="safeModal">
+      <div class="modal__box">
+        <button class="modal__close" id="safeModalClose">✕</button>
+        <div class="modal__title">🔐 Сейф</div>
+        <div class="modal__sub">Введите 4-значный код</div>
+        <div class="modal__content">
+          <div class="input-row">
+            <input type="text" id="safeInput" placeholder="4 цифры" maxlength="4">
+            <button class="btn btn--gold" onclick="checkSafeCode()">Открыть</button>
+          </div>
+          <div class="feedback" id="safeFb"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА -->
+  <div class="modal" id="modal">
+    <div class="modal__box" id="modalBox">
+      <button class="modal__close" id="modalClose">✕</button>
+      <div class="modal__title" id="modalTitle">Заголовок</div>
+      <div class="modal__sub" id="modalSub">Подзаголовок</div>
+      <div class="modal__content" id="modalContent"></div>
+    </div>
+  </div>
+
+  <!-- ЗЕЛЁНЫЙ ЭКРАН -->
+  <div class="green-overlay" id="greenOverlay">
+    <div class="green-box">
+      <div class="green-box__icon" id="greenIcon">✓</div>
+      <div class="green-box__title" id="greenTitle">Верно!</div>
+      <div class="green-box__text" id="greenText"></div>
+      <button class="btn btn--gold" style="width:100%; margin-top:8px;" onclick="closeGreen()">
+        ✓ Прочитано
+      </button>
+    </div>
+  </div>
+
+  <!-- ФИНАЛ -->
+  <div class="final-screen" id="finalScreen">
+    <div class="final-box">
+      <div class="seal">⚖️</div>
+      <h2>Дело закрыто</h2>
+      <p>
+        Вы восстановили всю цепочку. Ошибка в начале — и ошибка в конце.
+        Круг замкнулся.
+      </p>
+      <div class="chain">
+        <b>БЕНКЕНДОРФ</b> → ПЕРЕЛОМ → ВТОРОЙ ГОЛОС → <b>ОШИБКА</b><br>
+        → ПСИХОСОМАТИКА → ЗАЩИТА → НАПОМИНАНИЕ → <b>ОШИБКА</b>
+      </div>
+      <p style="font-size:0.8rem;">
+        «Ошибка в начале — и ошибка в конце. Всё началось с ошибки —
+        и ею же закончилось. Только теперь эта ошибка ходит по городу,
+        ездит на мотоцикле в чёрном костюме и лепит статуи.»
+      </p>
+      <button class="btn btn--outline" style="margin-top:16px; padding:12px 24px; border-radius:30px; font-size:0.85rem;" onclick="returnToNotes()">
+        📝 Прочитать записки
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =====================================================
+   СОСТОЯНИЕ
+   ===================================================== */
+const state = {
+  level: 1,
+  inventory: [],
+  notes: [],
+  unreadCount: 0,
+  currentNoteIndex: 0,
+  journal: {
+    name: 'Александр Х.',
+    year: '1991 г.',
+    caseNumber: null,
+    operationDate: null,
+    plates: null,
+    patient: null,
+    reaction: null
+  },
+  hintUnlocked: false,
+  darkMode: false,
+  arrowVisible: false,
+  lightOn: false,
+  gameFinished: false,
+  pendingAfterGreen: null
+};
+
+const $  = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+const room = $('#room');
+const deskScreen = $('#deskScreen');
+const closetScreen = $('#closetScreen');
+
+const RU_ALPHABET = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ';
+
+/* =====================================================
+   ВЫКЛЮЧАТЕЛЬ
+   ===================================================== */
+const wallSwitch = $('#wallSwitch');
+
+wallSwitch.addEventListener('click', () => {
+  state.lightOn = !state.lightOn;
+  wallSwitch.classList.toggle('on', state.lightOn);
+  room.classList.toggle('light-on', state.lightOn);
+});
+
+/* =====================================================
+   ПЕРЕХОДЫ
+   ===================================================== */
+$('#deskStart').addEventListener('click', () => {
+  room.classList.add('hidden');
+  deskScreen.classList.add('active');
+  updateHUD();
+});
+
+$('#backToRoomFromDesk').addEventListener('click', () => {
+  deskScreen.classList.remove('active');
+  room.classList.remove('hidden');
+});
+
+$('#backToRoomFromCloset').addEventListener('click', () => {
+  closetScreen.classList.remove('active');
+  room.classList.remove('hidden');
+});
+
+$('#closet').addEventListener('click', () => {
+  room.classList.add('hidden');
+  closetScreen.classList.add('active');
+});
+
+$('#arrowToDesk').addEventListener('click', () => {
+  closetScreen.classList.remove('active');
+  deskScreen.classList.add('active');
+  setTimeout(() => {
+    $('#itemLens').style.display = 'block';
+    $('#itemLens').style.left = '42%';
+    $('#itemLens').style.top = '68%';
+    $('#itemLens').style.bottom = 'auto';
+    $('#itemLens').style.right = 'auto';
+    $('#arrowToDesk').classList.remove('show');
+    state.arrowVisible = false;
+  }, 600);
+});
+
+/* =====================================================
+   ПЕРЕТАСКИВАНИЕ
+   ===================================================== */
+function makeDraggable(el) {
+  let isDown = false, startX, startY, origX, origY, moved = false;
+
+  el.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    if (state.darkMode) return;
+    isDown = true; moved = false;
+    el.classList.add('dragging');
+    const rect = el.getBoundingClientRect();
+    const parentRect = el.parentElement.getBoundingClientRect();
+    origX = rect.left - parentRect.left;
+    origY = rect.top - parentRect.top;
+    startX = e.clientX; startY = e.clientY;
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
+    el.style.left = (origX + dx) + 'px';
+    el.style.top  = (origY + dy) + 'px';
+    el.style.right = 'auto';
+    el.style.bottom = 'auto';
+    el.style.transform = 'none';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!isDown) return;
+    isDown = false;
+    el.classList.remove('dragging');
+    if (!moved) el.dispatchEvent(new CustomEvent('itemClick'));
+  });
+
+  el.addEventListener('touchstart', (e) => {
+    if (state.darkMode) return;
+    isDown = true; moved = false;
+    const t = e.touches[0];
+    const rect = el.getBoundingClientRect();
+    const parentRect = el.parentElement.getBoundingClientRect();
+    origX = rect.left - parentRect.left;
+    origY = rect.top - parentRect.top;
+    startX = t.clientX; startY = t.clientY;
+  }, {passive: true});
+
+  document.addEventListener('touchmove', (e) => {
+    if (!isDown) return;
+    const t = e.touches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
+    el.style.left = (origX + dx) + 'px';
+    el.style.top  = (origY + dy) + 'px';
+    el.style.right = 'auto';
+    el.style.bottom = 'auto';
+    el.style.transform = 'none';
+  }, {passive: true});
+
+  document.addEventListener('touchend', () => {
+    if (!isDown) return;
+    isDown = false;
+    el.classList.remove('dragging');
+    if (!moved) el.dispatchEvent(new CustomEvent('itemClick'));
+  });
+}
+
+/* =====================================================
+   HUD
+   ===================================================== */
+function updateHUD() {
+  $('#levelBadgeDesk').textContent = `Уровень ${state.level} / 9`;
+}
+
+function addToInventory(item) {
+  if (state.inventory.includes(item)) return;
+  state.inventory.push(item);
+  const inv = $('#inventory');
+  const empty = $('#invEmpty');
+  empty.style.display = 'none';
+  const el = document.createElement('div');
+  el.className = 'inv-item';
+  el.textContent = item;
+  inv.appendChild(el);
+}
+
+/* =====================================================
+   МОДАЛКА
+   ===================================================== */
+const modal = $('#modal');
+const modalTitle = $('#modalTitle');
+const modalSub = $('#modalSub');
+const modalContent = $('#modalContent');
+
+function openModal(title, sub, html) {
+  modalTitle.textContent = title;
+  modalSub.textContent = sub;
+  modalContent.innerHTML = html;
+  modal.classList.add('active');
+}
+function closeModal() {
+  modal.classList.remove('active');
+}
+$('#modalClose').addEventListener('click', closeModal);
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+/* =====================================================
+   ЗЕЛЁНЫЙ ЭКРАН
+   ===================================================== */
+const greenOverlay = $('#greenOverlay');
+const greenTitle = $('#greenTitle');
+const greenText = $('#greenText');
+const greenIcon = $('#greenIcon');
+
+function showGreen(title, text, icon = '✓', onClose = null) {
+  greenTitle.textContent = title;
+  greenText.innerHTML = text;
+  greenIcon.textContent = icon;
+  greenOverlay.classList.add('active');
+  state.pendingAfterGreen = onClose;
+}
+
+function closeGreen() {
+  greenOverlay.classList.remove('active');
+  if (typeof state.pendingAfterGreen === 'function') {
+    const fn = state.pendingAfterGreen;
+    state.pendingAfterGreen = null;
+    setTimeout(fn, 300);
+  }
+}
+
+/* =====================================================
+   АРХИВ ЗАПИСОК
+   ===================================================== */
+function addNote(title, text, sign = '— Бенкендорф') {
+  state.notes.push({ title, text, sign });
+  state.unreadCount++;
+  renderNotesCorner();
+}
+
+function renderNotesCorner() {
+  const corner = $('#notesCorner');
+  corner.innerHTML = '';
+
+  if (state.notes.length === 0) return;
+
+  const bubble = document.createElement('div');
+  bubble.className = 'note-bubble';
+  bubble.title = 'Записки Бенкендорфа';
+
+  if (state.unreadCount > 0) {
+    const badge = document.createElement('div');
+    badge.className = 'note-bubble__badge';
+    badge.textContent = state.unreadCount;
+    bubble.appendChild(badge);
+  }
+
+  const counter = document.createElement('div');
+  counter.className = 'note-bubble__count';
+  counter.textContent = `${state.notes.length}/${state.notes.length}`;
+  bubble.appendChild(counter);
+
+  bubble.addEventListener('click', () => {
+    state.currentNoteIndex = state.notes.length - 1;
+    openNoteArchive();
+  });
+
+  corner.appendChild(bubble);
+}
+
+function openNoteArchive() {
+  if (state.notes.length === 0) return;
+  const i = state.currentNoteIndex;
+  const note = state.notes[i];
+
+  // Кнопка "Начать заново" показывается ТОЛЬКО когда игра закончена
+  const restartBtnHTML = state.gameFinished
+    ? `<div class="archive-top-restart">
+         <button onclick="restartGame()">🔄 Начать с начала</button>
+       </div>`
+    : '';
+
+  const html = `
+    ${restartBtnHTML}
+    <div class="note-paper">
+      ${note.text}
+      <div class="note-paper__sign">${note.sign}</div>
+    </div>
+    <div class="archive-nav">
+      <button onclick="prevNote()" ${i === 0 ? 'disabled' : ''}>← Назад</button>
+      <div class="archive-counter">${i + 1} / ${state.notes.length}</div>
+      <button onclick="nextNote()" ${i === state.notes.length - 1 ? 'disabled' : ''}>Вперёд →</button>
+    </div>
+    <button class="btn btn--gold" style="width:100%; margin-top:10px;" onclick="closeModal()">
+      Закрыть
+    </button>
+  `;
+
+  state.unreadCount = 0;
+  renderNotesCorner();
+
+  openModal('📝 ' + note.title, 'Архив записок', html);
+}
+
+function prevNote() {
+  if (state.currentNoteIndex > 0) {
+    state.currentNoteIndex--;
+    openNoteArchive();
+  }
+}
+
+function nextNote() {
+  if (state.currentNoteIndex < state.notes.length - 1) {
+    state.currentNoteIndex++;
+    openNoteArchive();
+  }
+}
+
+function restartGame() {
+  location.reload();
+}
+
+/* =====================================================
+   ПОДСКАЗКИ
+   ===================================================== */
+const hints = {
+  1: 'Дата операции — на календаре на стене.',
+  2: 'Количество пластин — на часах на стене.',
+  3: 'Свет погас. Возьмите фонарик и водите им по столу — ищите номер.',
+  4: 'Заключение врача — переверните лист, там зеркальный текст.',
+  5: 'Шифр на рецепте. Сдвиньте буквы на 3 назад. Используйте алфавит.',
+  6: 'Код сейфа — фотография на столе.',
+  7: 'Сейф находится в шкафу справа.',
+  8: 'Лупа появится на столе после сейфа. Соберите слово из букв.',
+  9: 'Ключ появится на столе после лупы.',
+  10: 'Вердикт — два слова. Соберите их из букв.'
+};
+
+$('#hintBtnDesk').addEventListener('click', () => {
+  if (!state.hintUnlocked) {
+    openModal('💡 Подсказка', 'Подсказка недоступна',
+      `<div class="sticky-note">Сначала откройте задание в журнале — тогда подсказка станет доступна.</div>`);
+    return;
+  }
+  const h = hints[state.level] || 'Подсказка появится позже.';
+  openModal('💡 Подсказка', `Уровень ${state.level}`, `<div class="sticky-note">${h}</div>`);
+});
+
+/* =====================================================
+   ЖУРНАЛ
+   ===================================================== */
+function renderJournal() {
+  const j = state.journal;
+  const color = v => v ? '#22c55e' : '#8b6a3a';
+  const val = (v, empty) => v || empty;
+  return `
+    <div class="doc-paper">
+      <b>ЖУРНАЛ ДЕЛА · Александр Х.</b><br>
+      <b>Год рождения:</b> ${j.year}<br>
+      <hr style="margin:8px 0;border-color:rgba(80,60,30,0.2);">
+      <b>Номер дела:</b> <span style="color:${color(j.caseNumber)};font-weight:700;">${val(j.caseNumber,'________')}</span><br>
+      <b>Дата операции:</b> <span style="color:${color(j.operationDate)};font-weight:700;">${val(j.operationDate,'__________')}</span><br>
+      <b>Кол-во пластин:</b> <span style="color:${color(j.plates)};font-weight:700;">${val(j.plates,'________')}</span><br>
+      <b>Пациент:</b> <span style="color:${color(j.patient)};font-weight:700;">${val(j.patient,'________')}</span><br>
+      <b>Реакция пациента:</b> <span style="color:${color(j.reaction)};font-weight:700;">${val(j.reaction,'________')}</span>
+    </div>
+  `;
+}
+
+const LEVELS = {
+  1: { q:'Найдите и запишите <b>дату операции</b>.', correct:['14.07.2023','14.07.23','14/07/2023'], field:'operationDate', value:'14.07.2023', inv:'Дата: 14.07.2023' },
+  2: { q:'Сколько <b>пластин</b> установили?', correct:['3','три'], field:'plates', value:'3', inv:'Пластин: 3' },
+  3: { q:'Найдите <b>номер дела</b>. Он скрыт в темноте.', correct:['оп-2847','оп2847','2847','№2847','оп 2847'], field:'caseNumber', value:'ОП-2847', inv:'Номер дела: ОП-2847' },
+  4: { q:'Что зафиксировали <b>во время операции</b>? Переверните заключение.', correct:['вздрагивание','вздрогнул'], field:'reaction', value:'вздрагивание', inv:'Реакция: вздрагивание' },
+  5: { q:'Расшифруйте <b>фамилию пациента</b>. Сдвиг 3 буквы назад.', correct:['бенкендорф'], field:'patient', value:'Бенкендорф', inv:'Пациент: Бенкендорф' }
+};
+
+$('#itemFolder').addEventListener('itemClick', () => {
+  const j = state.journal;
+  let nextLevel = 1;
+  if (!j.operationDate) nextLevel = 1;
+  else if (!j.plates) nextLevel = 2;
+  else if (!j.caseNumber) nextLevel = 3;
+  else if (!j.reaction) nextLevel = 4;
+  else if (!j.patient) nextLevel = 5;
+  else {
+    openModal('📖 Журнал дела', 'Все записи заполнены', renderJournal() +
+      `<div class="feedback show success">✓ Журнал полностью заполнен!</div>`);
+    return;
+  }
+
+  state.level = nextLevel;
+  state.hintUnlocked = true;
+  updateHUD();
+
+  const L = LEVELS[nextLevel];
+
+  openModal(
+    '📖 Журнал дела',
+    `Задание ${nextLevel}`,
+    renderJournal() + `
+      <div style="font-size:0.82rem; color:#f4d35e; margin:12px 0; text-align:center; font-weight:700; line-height:1.5;">
+        ${L.q}
+      </div>
+      <div class="input-row">
+        <input type="text" id="journalInput" placeholder="Ответ...">
+        <button class="btn btn--gold" onclick="submitJournal()">Записать</button>
+      </div>
+      <div class="feedback" id="journalFb"></div>
+    `
+  );
+});
+
+function submitJournal() {
+  const v = $('#journalInput').value.trim().toLowerCase();
+  const fb = $('#journalFb');
+  const lvl = state.level;
+  const L = LEVELS[lvl];
+
+  if (!L) return;
+
+  if (L.correct.map(x => x.toLowerCase()).includes(v)) {
+    state.journal[L.field] = L.value;
+    addToInventory(L.inv);
+    fb.className = 'feedback show success';
+    fb.textContent = '✓ Записано!';
+
+    state.level = lvl + 1;
+    state.hintUnlocked = false;
+    updateHUD();
+
+    if (lvl === 3) {
+      $('#arrowToDesk').classList.remove('show');
+      state.arrowVisible = false;
+      $('#hiddenNumber').style.display = 'none';
+      $('#itemDoc').style.display = 'block';
+    }
+
+    if (lvl === 2) {
+      setTimeout(() => {
+        closeModal();
+        addNote(
+          'Записка · После операции',
+          'Я почувствовал, будто кто-то внутри меня поселился.<br><br>' +
+          'Сначала — тихий шёпот. Потом — голос. Он слышит всё, что слышу я.<br><br>' +
+          'Он не мой. Но он — часть меня.'
+        );
+        showGreen(
+          'Записка получена',
+          'Записка добавлена в архив.<br>Нажмите 📝 в углу, чтобы прочитать.',
+          '📝',
+          () => startDarkMode()
+        );
+      }, 900);
+      return;
+    }
+
+    setTimeout(() => {
+      closeModal();
+      if (lvl === 4) $('#itemRecipe').style.display = 'block';
+      if (lvl === 5) $('#itemPhoto').style.display = 'block';
+    }, 1200);
+  } else {
+    fb.className = 'feedback show error';
+    fb.textContent = '✗ Неверно.';
+  }
+}
+
+/* =====================================================
+   ТЁМНЫЙ РЕЖИМ
+   ===================================================== */
+function startDarkMode() {
+  state.darkMode = true;
+  state.level = 3;
+  state.hintUnlocked = true;
+  updateHUD();
+
+  deskScreen.classList.add('dark');
+  $('#flashlight').classList.add('on');
+  $('#flashlightBeam').classList.add('on');
+
+  const num = $('#hiddenNumber');
+  num.style.color = 'transparent';
+  num.style.textShadow = 'none';
+  num.style.display = 'block';
+
+  openModal('🔦 Взгляд в темноте', 'Свет внезапно погас...',
+    `
+    <div class="sticky-note">
+      В темноте что-то светится на столе. Возьмите фонарик и водите им,
+      чтобы найти скрытый номер.
+    </div>
+    <button class="btn btn--gold" style="margin-top:14px;width:100%;" onclick="closeModal()">Взять фонарик</button>
+  `);
+}
+
+deskScreen.addEventListener('mousemove', (e) => {
+  if (!state.darkMode) return;
+  const rect = deskScreen.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  const fl = $('#flashlight');
+  const beam = $('#flashlightBeam');
+  fl.style.left = x + 'px';
+  fl.style.top = y + 'px';
+  beam.style.left = x + 'px';
+  beam.style.top = y + 'px';
+
+  const num = $('#hiddenNumber');
+  const numRect = num.getBoundingClientRect();
+  const numX = numRect.left + numRect.width/2 - rect.left;
+  const numY = numRect.top + numRect.height/2 - rect.top;
+  const dist = Math.hypot(x - numX, y - numY);
+
+  if (dist < 100) {
+    num.style.color = '#d4a76a';
+    num.style.textShadow = '0 0 25px rgba(212,167,106,0.9)';
+  } else {
+    num.style.color = 'transparent';
+    num.style.textShadow = 'none';
+  }
+});
+
+$('#flashlight').addEventListener('click', (e) => {
+  if (!state.darkMode) return;
+  e.stopPropagation();
+
+  const rect = deskScreen.getBoundingClientRect();
+  const num = $('#hiddenNumber');
+  const numRect = num.getBoundingClientRect();
+  const numX = numRect.left + numRect.width/2 - rect.left;
+  const numY = numRect.top + numRect.height/2 - rect.top;
+
+  const flRect = $('#flashlight').getBoundingClientRect();
+  const flX = flRect.left + flRect.width/2 - rect.left;
+  const flY = flRect.top + flRect.height/2 - rect.top;
+
+  const dist = Math.hypot(flX - numX, flY - numY);
+
+  if (dist < 110) foundCaseNumber();
+});
+
+function foundCaseNumber() {
+  state.darkMode = false;
+  deskScreen.classList.remove('dark');
+  $('#flashlight').classList.remove('on');
+  $('#flashlightBeam').classList.remove('on');
+
+  const num = $('#hiddenNumber');
+  num.style.color = '#22c55e';
+  num.style.textShadow = '0 0 25px rgba(34,197,94,1)';
+
+  showGreen(
+    'Номер найден!',
+    'Номер дела: <b>ОП-2847</b><br><br>Свет вернулся. Занесите номер в журнал.',
+    '🔦'
+  );
+}
+
+/* =====================================================
+   КАЛЕНДАРЬ
+   ===================================================== */
+$('#calendarWall').addEventListener('click', () => {
+  openModal('📅 Календарь', 'Июль 2023', `
+    <div class="doc-paper" style="text-align:center;">
+      <div style="font-size:1.3rem; font-weight:800; color:#c0392b; letter-spacing:2px;">ИЮЛЬ 2023</div>
+      <div style="margin-top:10px; font-size:0.9rem; line-height:1.8;">
+        Пн Вт Ср Чт Пт Сб Вс<br>
+        3  4  5  6  7  8  9<br>
+        10 11 12 13 <b style="color:#c0392b;background:#f4d35e;padding:2px 8px;border-radius:50%;">14</b> 15 16
+      </div>
+      <div style="margin-top:12px; font-size:0.8rem; color:#4a2e15;">
+        На 14 июля пометка: <b>«Операция»</b>
+      </div>
+    </div>
+  `);
+});
+
+/* =====================================================
+   ЧАСЫ
+   ===================================================== */
+$('#clockWall').addEventListener('click', () => {
+  openModal('⏰ Часы', 'Стрелки показывают на 3', `
+    <div style="text-align:center; margin-bottom:16px;">
+      <div style="display:inline-block; width:130px; height:130px; border-radius:50%;
+        background:radial-gradient(circle, #f5f0e0 0%, #c9bfa0 100%);
+        box-shadow: inset 0 0 0 4px #8b6a3a, 0 8px 20px rgba(0,0,0,0.6); position:relative;">
+        <div style="position:absolute;top:50%;left:50%;width:4px;height:38px;background:#2a1f10;
+          transform-origin:bottom;transform:translate(-50%,-100%) rotate(90deg);border-radius:2px;"></div>
+        <div style="position:absolute;top:50%;left:50%;width:3px;height:48px;background:#c0392b;
+          transform-origin:bottom;transform:translate(-50%,-100%) rotate(90deg);border-radius:2px;"></div>
+        <div style="position:absolute;top:50%;left:50%;width:8px;height:8px;background:#2a1f10;
+          border-radius:50%;transform:translate(-50%,-50%);"></div>
+      </div>
+    </div>
+    <div class="sticky-note">Записка рядом: «Стрелки сошлись на <b>трёх</b>.»</div>
+  `);
+});
+
+/* =====================================================
+   ЗАКЛЮЧЕНИЕ ВРАЧА
+   ===================================================== */
+$('#itemDoc').addEventListener('itemClick', () => {
+  state.hintUnlocked = true;
+  openModal('📄 Заключение врача',
+    'Лист можно перевернуть',
+    `
+    <div id="docFront" style="text-align:center; padding:20px; background:#e8e0cc; border-radius:4px; margin-bottom:12px;">
+      <div style="font-family:'Georgia',serif; color:#2a1f10; font-size:0.9rem;">
+        <b>ЗАКЛЮЧЕНИЕ</b><br><br>
+        Пациент: Александр Х.<br>
+        Жалобы: <i>не принимаются</i><br>
+        Диагноз: норма<br><br>
+        <span style="color:#8b6a3a; font-style:italic;">(оборотная сторона — важна)</span>
+      </div>
+    </div>
+    <button class="btn btn--gold" style="width:100%;" onclick="flipDoc()">🔄 Перевернуть лист</button>
+  `);
+});
+
+function flipDoc() {
+  openModal('📄 Заключение врача',
+    'Оборотная сторона',
+    `
+    <div class="doc-paper" style="text-align:center;">
+      <b>Оборотная сторона заключения:</b><br>
+      <div id="mirrorDoc" style="font-family:'Courier New', monospace; font-size:1rem;
+        color:#8b6a3a; letter-spacing:3px; padding:14px; margin-top:10px;
+        transform:scaleX(-1); user-select:none;">
+        ЕИНАВИДГАРДЗВ
+      </div>
+    </div>
+    <button class="btn" style="margin-bottom:10px;width:100%;" onclick="
+      const el=document.getElementById('mirrorDoc');
+      el.style.transform = el.style.transform==='scaleX(1)' ? 'scaleX(-1)' : 'scaleX(1)';
+    ">🔄 Показать в зеркале</button>
+    <div style="font-size:0.75rem;color:#8a8a9a;text-align:center;">
+      Перепишите слово правильно и запишите в журнал.
+    </div>
+  `);
+}
+
+/* =====================================================
+   РЕЦЕПТ — ШИФР ЦЕЗАРЯ
+   ===================================================== */
+$('#itemRecipe').addEventListener('itemClick', () => {
+  state.hintUnlocked = true;
+
+  const cipher = 'ДЗРНЗРЖСУЧ';
+
+  const topRow = RU_ALPHABET.split('').map(l => `<span class="letter">${l}</span>`).join('');
+  const bottomRow = RU_ALPHABET.split('').map(l => {
+    const idx = RU_ALPHABET.indexOf(l);
+    const newIdx = (idx - 3 + RU_ALPHABET.length) % RU_ALPHABET.length;
+    return `<span class="letter under">${RU_ALPHABET[newIdx]}</span>`;
+  }).join('');
+
+  openModal('💊 Рецептурный бланк',
+    'Шифр Цезаря — сдвиг 3 буквы назад',
+    `
+    <div class="doc-paper">
+      <b>Зашифрованная фамилия пациента:</b><br><br>
+      <div style="font-family:'Courier New', monospace; font-size:1.4rem;
+        letter-spacing:8px; color:#c0392b; text-align:center; padding:14px; font-weight:800;">
+        ${cipher}
+      </div>
+    </div>
+
+    <div style="font-size:0.78rem; color:#f4d35e; text-align:center; font-weight:700; margin-bottom:8px;">
+      Чтобы расшифровать — сдвиньте каждую букву на 3 назад по алфавиту.
+    </div>
+
+    <div class="alphabet-box">
+      <div class="label">ЗАШИФРОВАНО</div>
+      <div class="row">${topRow}</div>
+      <div class="divider">↓ сдвиг 3 ↓</div>
+      <div class="label">РАСШИФРОВКА</div>
+      <div class="row">${bottomRow}</div>
+    </div>
+
+    <div class="example-box">
+      <b>Пример:</b><br>
+      Д — три буквы назад — Б, В, А — <b>А</b>.<br>
+      <b>Д → А</b>
+    </div>
+
+    <div style="font-size:0.78rem; color:#f4d35e; margin:10px 0 4px; text-align:center; font-weight:700;">
+      Расшифруйте всю фамилию:
+    </div>
+    <div class="input-row">
+      <input type="text" id="recipeInput" placeholder="Ответ...">
+      <button class="btn btn--gold" onclick="checkPatient()">Записать</button>
+    </div>
+    <div class="feedback" id="recipeFb"></div>
+  `);
+});
+
+function checkPatient() {
+  const v = $('#recipeInput').value.trim().toLowerCase();
+  const fb = $('#recipeFb');
+  if (v === 'бенкендорф') {
+    fb.className = 'feedback show success';
+    fb.textContent = '✓ Верно! БЕНКЕНДОРФ.';
+    state.journal.patient = 'Бенкендорф';
+    addToInventory('Пациент: Бенкендорф');
+    $('#itemRecipe').classList.add('done');
+
+    state.level = 6;
+    state.hintUnlocked = false;
+    updateHUD();
+
+    setTimeout(() => {
+      closeModal();
+      addNote(
+        'Записка · От пациента',
+        'Меня зовут <b>Бенкендорф</b>.<br><br>' +
+        'После операции я перестал быть собой. Внутри меня поселился кто-то другой.<br>' +
+        'Я слышу его. Он злится. Он хочет выйти.<br><br>' +
+        'Все, кто был виноват, — не понесли наказания. Значит, накажу я.'
+      );
+      showGreen(
+        'Записка получена',
+        'Записка от Бенкендорфа добавлена в архив.<br>Нажмите 📝 в углу, чтобы прочитать.',
+        '📝',
+        () => {
+          $('#itemPhoto').style.display = 'block';
+        }
+      );
+    }, 1200);
+  } else {
+    fb.className = 'feedback show error';
+    fb.textContent = '✗ Неверно. Сверьтесь с алфавитом.';
+  }
+}
+
+/* =====================================================
+   ФОТО
+   ===================================================== */
+$('#itemPhoto').addEventListener('itemClick', () => {
+  state.hintUnlocked = true;
+  openModal('📷 Фотография',
+    'Соберите 4 цифры для сейфа',
+    `
+    <div class="doc-paper" style="font-family:'Segoe UI',sans-serif;">
+      <b>На фото — четверо коллег. На их бейджах — цифры.</b><br><br>
+      • 1-я цифра — <b>вторая цифра</b> даты операции<br>
+      • 2-я цифра — <b>последняя цифра</b> года<br>
+      • 3-я цифра — <b>количество пластин</b><br>
+      • 4-я цифра — <b>число месяца операции</b>
+    </div>
+  `);
+  addToInventory('Код сейфа: 4337');
+  $('#itemPhoto').classList.add('done');
+  state.level = 7;
+  state.hintUnlocked = false;
+  updateHUD();
+});
+
+/* =====================================================
+   СЕЙФ
+   ===================================================== */
+$('#safeDial').addEventListener('click', () => {
+  $('#safeModal').classList.add('active');
+});
+$('#safeModalClose').addEventListener('click', () => {
+  $('#safeModal').classList.remove('active');
+});
+$('#safeModal').addEventListener('click', e => {
+  if (e.target === $('#safeModal')) $('#safeModal').classList.remove('active');
+});
+
+function checkSafeCode() {
+  const v = $('#safeInput').value.trim();
+  const fb = $('#safeFb');
+  if (v === '4337') {
+    fb.className = 'feedback show success';
+    fb.innerHTML = `
+      🔓 <b>Сейф открыт!</b><br><br>
+      Записка Бенкендорфа:<br><br>
+      <i>«До операции я был другим. После — слышу его. Он растёт.
+      Он ненавидит всех, кто отмахнулся.»</i>
+    `;
+    addToInventory('Записка из сейфа');
+    state.level = 8;
+    updateHUD();
+    setTimeout(() => {
+      $('#safeModal').classList.remove('active');
+      $('#arrowToDesk').classList.add('show');
+      state.arrowVisible = true;
+    }, 2500);
+  } else {
+    fb.className = 'feedback show error';
+    fb.textContent = '✗ Неверный код.';
+  }
+}
+
+/* =====================================================
+   ЛУПА
+   ===================================================== */
+$('#itemLens').addEventListener('itemClick', () => {
+  state.hintUnlocked = true;
+  openLensTask();
+});
+
+let lensSlots = [];
+
+function openLensTask() {
+  const answer = 'НАПОМИНАНИЕ';
+  const letters = answer.split('');
+  const shuffled = [...letters].sort(() => Math.random() - 0.5);
+
+  lensSlots = new Array(answer.length).fill(null);
+
+  const chipsHTML = shuffled.map((ch, i) => `
+    <div class="letter-chip" data-letter="${ch}" data-id="chip-${i}"
+      style="left: ${10 + (i * 8) % 75}%; top: ${15 + (i * 17) % 60}%;">
+      ${ch}
+    </div>
+  `).join('');
+
+  const slotsHTML = answer.split('').map((_, i) => `
+    <div class="slot" data-idx="${i}" data-num="${i+1}" onclick="clearLensSlot(${i})"></div>
+  `).join('');
+
+  openModal('🔎 Лупа',
+    'Увеличенное изображение · Соберите слово',
+    `
+    <div class="sticky-note" style="font-size:0.72rem; transform:rotate(0deg);">
+      «Они не понесли. Никто не понёс. Значит — я понесу.
+      Я буду их <i>напоминанием</i>. Каждая статуя — это память о том, что они сделали.»
+    </div>
+    <div style="font-size:0.75rem; color:#8a8a9a; text-align:center; margin-bottom:8px;">
+      Соберите слово из 11 букв. Кликайте по светящимся фрагментам по порядку.
+    </div>
+    <div class="letter-field" id="letterField">
+      ${chipsHTML}
+    </div>
+    <div class="slots-row" id="slotsRow">
+      ${slotsHTML}
+    </div>
+    <div class="feedback" id="lensFb"></div>
+    <button class="btn btn--gold" style="width:100%; margin-top:10px;" onclick="checkLensWord()">Проверить</button>
+  `);
+
+  $$('#letterField .letter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      if (chip.classList.contains('used')) return;
+      const emptyIdx = lensSlots.indexOf(null);
+      if (emptyIdx === -1) return;
+
+      lensSlots[emptyIdx] = chip.dataset.letter;
+      const slot = $(`#slotsRow .slot[data-idx="${emptyIdx}"]`);
+      slot.textContent = chip.dataset.letter;
+      slot.classList.add('filled');
+      chip.classList.add('used');
+    });
+  });
+}
+
+function clearLensSlot(idx) {
+  if (lensSlots[idx] === null) return;
+  const letter = lensSlots[idx];
+  lensSlots[idx] = null;
+
+  const slot = $(`#slotsRow .slot[data-idx="${idx}"]`);
+  slot.textContent = '';
+  slot.classList.remove('filled', 'correct', 'wrong');
+
+  const chips = $$('#letterField .letter-chip');
+  for (const chip of chips) {
+    if (chip.dataset.letter === letter && chip.classList.contains('used')) {
+      chip.classList.remove('used');
+      break;
+    }
+  }
+}
+
+function checkLensWord() {
+  const answer = 'НАПОМИНАНИЕ';
+  const fb = $('#lensFb');
+
+  if (lensSlots.includes(null)) {
+    fb.className = 'feedback show error';
+    fb.textContent = '✗ Заполните все ячейки.';
+    return;
+  }
+
+  const userWord = lensSlots.join('');
+  const slots = $$('#slotsRow .slot');
+
+  if (userWord === answer) {
+    slots.forEach(s => s.classList.add('correct'));
+    addToInventory('Слово: НАПОМИНАНИЕ');
+    $('#itemLens').classList.add('done');
+    state.level = 9;
+    state.hintUnlocked = false;
+    updateHUD();
+
+    setTimeout(() => {
+      closeModal();
+      addNote(
+        'Записка · Напоминание',
+        'НАПОМИНАНИЕ.<br><br>' +
+        'Они не понесли. Никто не понёс.<br>' +
+        'Значит — я понесу.<br><br>' +
+        'Я буду их напоминанием. Каждая статуя — это память о том, что они сделали.'
+      );
+      showGreen(
+        'Верно! НАПОМИНАНИЕ',
+        'Александр лепит статуи, чтобы никто не забыл.<br>' +
+        'Каждая — напоминание о врачебной ошибке.',
+        '✓',
+        () => {
+          $('#itemKey').style.display = 'block';
+        }
+      );
+    }, 600);
+  } else {
+    slots.forEach(s => s.classList.add('wrong'));
+    fb.className = 'feedback show error';
+    fb.textContent = '✗ Неверно. Попробуйте снова.';
+
+    setTimeout(() => {
+      slots.forEach(s => {
+        s.classList.remove('wrong', 'filled');
+        s.textContent = '';
+      });
+      $$('#letterField .letter-chip').forEach(c => c.classList.remove('used'));
+      lensSlots = new Array(answer.length).fill(null);
+    }, 1200);
+  }
+}
+
+/* =====================================================
+   КЛЮЧ → ВЕРДИКТ
+   ===================================================== */
+$('#itemKey').addEventListener('itemClick', () => {
+  state.hintUnlocked = true;
+  openVerdictTask();
+});
+
+let verdictWord1 = [];
+let verdictWord2 = [];
+
+function openVerdictTask() {
+  const w1 = 'ВРАЧЕБНАЯ';
+  const w2 = 'ОШИБКА';
+  verdictWord1 = new Array(w1.length).fill(null);
+  verdictWord2 = new Array(w2.length).fill(null);
+
+  const chips1 = [...w1].sort(() => Math.random() - 0.5).map((ch, i) => `
+    <div class="verdict-chip" data-word="1" data-letter="${ch}" data-id="w1-${i}">${ch}</div>
+  `).join('');
+
+  const chips2 = [...w2].sort(() => Math.random() - 0.5).map((ch, i) => `
+    <div class="verdict-chip" data-word="2" data-letter="${ch}" data-id="w2-${i}">${ch}</div>
+  `).join('');
+
+  const slots1 = w1.split('').map((_, i) => `
+    <div class="verdict-slot" data-word="1" data-idx="${i}" onclick="clearVerdictSlot(1, ${i})"></div>
+  `).join('');
+
+  const slots2 = w2.split('').map((_, i) => `
+    <div class="verdict-slot" data-word="2" data-idx="${i}" onclick="clearVerdictSlot(2, ${i})"></div>
+  `).join('');
+
+  openModal('⚖️ Вердикт',
+    'Обвинительный акт · Соберите два слова',
+    `
+    <div class="doc-paper" style="font-family:'Georgia',serif;">
+      <b>ОБВИНИТЕЛЬНЫЙ АКТ</b><br>
+      <i>Причина трагедии Александра Х., 1991 г. р.</i><br>
+      <hr style="margin:8px 0; border-color:rgba(80,60,30,0.2);">
+      <div class="sticky-note" style="font-size:0.7rem; transform:rotate(-1deg);">
+        «Ковалёв ошибся. Соколова отмахнулась. Система промолчала. Но это была не злая воля — это была их профессиональная...»
+      </div>
+      <div class="verdict-word-row" id="wordRow1">${slots1}</div>
+      <div class="verdict-chips" id="wordChips1">${chips1}</div>
+      <div class="sticky-note" style="font-size:0.7rem; transform:rotate(1deg);">
+        «Всё началось с одной... И ею же закончилось. Круг замкнулся.»
+      </div>
+      <div class="verdict-word-row" id="wordRow2">${slots2}</div>
+      <div class="verdict-chips" id="wordChips2">${chips2}</div>
+    </div>
+    <div class="feedback" id="verdictFb"></div>
+    <button class="btn btn--gold" style="width:100%; margin-top:10px;" onclick="checkVerdictWords()">Вынести вердикт</button>
+  `);
+
+  $$('#wordChips1 .verdict-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      if (chip.classList.contains('used')) return;
+      const idx = verdictWord1.indexOf(null);
+      if (idx === -1) return;
+      verdictWord1[idx] = chip.dataset.letter;
+      const slot = $(`#wordRow1 .verdict-slot[data-idx="${idx}"]`);
+      slot.textContent = chip.dataset.letter;
+      slot.classList.add('filled');
+      chip.classList.add('used');
+    });
+  });
+
+  $$('#wordChips2 .verdict-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      if (chip.classList.contains('used')) return;
+      const idx = verdictWord2.indexOf(null);
+      if (idx === -1) return;
+      verdictWord2[idx] = chip.dataset.letter;
+      const slot = $(`#wordRow2 .verdict-slot[data-idx="${idx}"]`);
+      slot.textContent = chip.dataset.letter;
+      slot.classList.add('filled');
+      chip.classList.add('used');
+    });
+  });
+}
+
+function clearVerdictSlot(word, idx) {
+  const arr = word === 1 ? verdictWord1 : verdictWord2;
+  if (arr[idx] === null) return;
+  const letter = arr[idx];
+  arr[idx] = null;
+
+  const rowId = word === 1 ? '#wordRow1' : '#wordRow2';
+  const chipsId = word === 1 ? '#wordChips1' : '#wordChips2';
+
+  const slot = $(`${rowId} .verdict-slot[data-idx="${idx}"]`);
+  slot.textContent = '';
+  slot.classList.remove('filled', 'correct', 'wrong');
+
+  const chips = $$(`${chipsId} .verdict-chip`);
+  for (const chip of chips) {
+    if (chip.dataset.letter === letter && chip.classList.contains('used')) {
+      chip.classList.remove('used');
+      break;
+    }
+  }
+}
+
+function checkVerdictWords() {
+  const w1 = 'ВРАЧЕБНАЯ';
+  const w2 = 'ОШИБКА';
+  const fb = $('#verdictFb');
+
+  if (verdictWord1.includes(null) || verdictWord2.includes(null)) {
+    fb.className = 'feedback show error';
+    fb.textContent = '✗ Заполните оба слова.';
+    return;
+  }
+
+  const userW1 = verdictWord1.join('');
+  const userW2 = verdictWord2.join('');
+
+  const slots1 = $$('#wordRow1 .verdict-slot');
+  const slots2 = $$('#wordRow2 .verdict-slot');
+
+  if (userW1 === w1 && userW2 === w2) {
+    slots1.forEach(s => s.classList.add('correct'));
+    slots2.forEach(s => s.classList.add('correct'));
+    addToInventory('Вердикт: ВРАЧЕБНАЯ ОШИБКА');
+    $('#itemKey').classList.add('done');
+    state.level = 10;
+    updateHUD();
+
+    setTimeout(() => {
+      closeModal();
+      addNote(
+        'Записка · Вердикт',
+        'ВРАЧЕБНАЯ ОШИБКА.<br><br>' +
+        'Дело передано в прокуратуру.<br>' +
+        'Александр Х., 1991 г. р., признан жертвой врачебной ошибки,<br>' +
+        'оставшейся безнаказанной.'
+      );
+      showGreen(
+        'Вердикт вынесен',
+        'Дело передано в прокуратуру.<br><br>' +
+        'Александр Х., 1991 г. р., признан жертвой <b>ВРАЧЕБНОЙ ОШИБКИ</b>,<br>' +
+        'оставшейся безнаказанной.',
+        '⚖️',
+        () => {
+          state.gameFinished = true;
+          $('#finalScreen').classList.add('active');
+        }
+      );
+    }, 600);
+  } else {
+    slots1.forEach(s => s.classList.add('wrong'));
+    slots2.forEach(s => s.classList.add('wrong'));
+    fb.className = 'feedback show error';
+    fb.textContent = '✗ Неверно. Попробуйте снова.';
+
+    setTimeout(() => {
+      slots1.forEach(s => {
+        s.classList.remove('wrong', 'filled');
+        s.textContent = '';
+      });
+      slots2.forEach(s => {
+        s.classList.remove('wrong', 'filled');
+        s.textContent = '';
+      });
+      $$('#wordChips1 .verdict-chip, #wordChips2 .verdict-chip').forEach(c => c.classList.remove('used'));
+      verdictWord1 = new Array(w1.length).fill(null);
+      verdictWord2 = new Array(w2.length).fill(null);
+    }, 1400);
+  }
+}
+
+/* =====================================================
+   ВОЗВРАТ К ЗАПИСКАМ ИЗ ФИНАЛА
+   ===================================================== */
+function returnToNotes() {
+  $('#finalScreen').classList.remove('active');
+  state.currentNoteIndex = 0;
+  state.unreadCount = 0;
+  renderNotesCorner();
+  openNoteArchive();
+}
+
+/* =====================================================
+   ПЕРЕТАСКИВАНИЕ
+   ===================================================== */
+['itemFolder','itemDoc','itemRecipe','itemPhoto','itemPhone','itemLetters','itemLens','itemKey','itemVerdict'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) makeDraggable(el);
+});
+</script>
+
+</body>
+</html>
